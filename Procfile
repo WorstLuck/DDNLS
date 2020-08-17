@@ -1,1 +1,1 @@
-web: gunicorn Corona:server
+web: gunicorn index:server
