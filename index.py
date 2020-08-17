@@ -97,7 +97,10 @@ app.layout = dbc.Container([
     dbc.Row([
         dbc.Col([
             dcc.Graph(id='second_moment', config={'scrollZoom': True, 'showTips': True})
-                ])
+                ],width = {"size":5,'offset':1}),
+        dbc.Col([
+            dcc.Graph(id='norms', config={'scrollZoom': True, 'showTips': True})
+               ],width = {"size":5})
            ]),
     dcc.Store(id='output-data-upload',storage_type='session'),
     html.Div(id='info'),
@@ -114,7 +117,7 @@ def giveSlider(N):
         return ['Nop','']
 
 @app.callback([Output('momenta','figure'),Output('site','options'),Output('energy','figure'),Output('N','disabled'),
-               Output('init','disabled'),Output('W','disabled'),Output('second_moment','figure')],
+               Output('init','disabled'),Output('W','disabled'),Output('second_moment','figure'),Output('norms','figure')],
               [Input('beta','value'),Input('W','value'),Input('S','value'),Input('tol','value'),
                Input('tau','value'),Input('Final time','value'),Input('init','value'),Input('site','value'),
                Input('Integrator','value'),Input('output-data-upload', 'data')],
@@ -130,6 +133,10 @@ def makePlot(beta,W,S,tol,tau,t_max,init,site_val,integrator,epsilons,max):
     # print(len(inputs))
     if len([i for i in inputs if str(i).lstrip('-').replace('.','',1).isdigit()])==len(inputs) and N > 5:
         N = int(N)
+        fig = subplots.make_subplots()
+        fig2 = subplots.make_subplots()
+        fig3 = subplots.make_subplots()
+        fig4 = subplots.make_subplots()
         # # Random list of alpha's
         # epsilon = np.random.uniform(-W / 2, W / 2, size=N)
         # # fixed epsilon
@@ -173,14 +180,14 @@ def makePlot(beta,W,S,tol,tau,t_max,init,site_val,integrator,epsilons,max):
             return p_0
 
         if epsilons is None:
-#             print('taking random epsilons')
-#             print('\n')
+            print('taking random epsilons')
+            print('\n')
             epsilon = np.random.uniform(-W / 2, W / 2, size=N)
             p_0 = makeWavepacket(p_0, N, start, L)
             outputs = [False,False,False]
         else:
             df = pd.read_json(epsilons)
-#             print('taking epsilons from file')
+            print('taking epsilons from file')
             epsilon = np.array(list(df['Epsilons']))
             p_0 = np.array(list(df['Momenta']))
             q_0 = np.array(list(df['Position']))
@@ -190,7 +197,7 @@ def makePlot(beta,W,S,tol,tau,t_max,init,site_val,integrator,epsilons,max):
                                                                                                         -1) * p_0 - np.roll(
             q_0, -1) * q_0
         H_0[-1] = (epsilon[-1] / 2) * (q_0[-1] ** 2 + p_0[-1] ** 2) + (beta / 8) * (q_0[-1] ** 2 + p_0[-1] ** 2) ** 2
-#         print('Initial Hamiltonian: {}'.format(sum(H_0)))
+        print('Initial Hamiltonian: {}'.format(sum(H_0)))
 
         S_0 = 0.5 * (q_0 * 2 + p_0 ** 2)
 
@@ -203,7 +210,7 @@ def makePlot(beta,W,S,tol,tau,t_max,init,site_val,integrator,epsilons,max):
 
         # Initial evolution vector
         u_0 = list(zip(q_0, p_0))
-#         print('U0 = {}'.format(u_0))
+        print('U0 = {}'.format(u_0))
 
         # initial time
         t_0 = 0
@@ -214,6 +221,8 @@ def makePlot(beta,W,S,tol,tau,t_max,init,site_val,integrator,epsilons,max):
         H = np.array([])
         S = np.array([])
         second_moment = np.array([])
+        normalised_energy = np.array([])
+
         def LA_t(c, vec):
             # Declare Q's and P's
             qvec = np.array([x[0] for x in vec])
@@ -251,6 +260,10 @@ def makePlot(beta,W,S,tol,tau,t_max,init,site_val,integrator,epsilons,max):
         w0 = 1 - 2 * (w1 + w2 + w3)
         c = 1 / 2
         d = 1
+
+        counter = 1
+
+        norm_e = []
 
         while t_0 < t_max:
 
@@ -330,6 +343,8 @@ def makePlot(beta,W,S,tol,tau,t_max,init,site_val,integrator,epsilons,max):
 
             # new calcs
             norms = S_new / sum(S_new)
+            if (counter == 1) or (counter == t_max/tau - 1):
+                norm_e.append(norms)
             lbar = sum([(index + 1) * i for index, i in enumerate(norms)])
             Part_num = 1 / (sum(norms ** 2))
             #     print(lbar,'center of distribution')
@@ -347,32 +362,39 @@ def makePlot(beta,W,S,tol,tau,t_max,init,site_val,integrator,epsilons,max):
 #                 print('H not conserved up to {}, broken at time step {}'.format(eps, t_0))
                 break
             t_0 += tau
+            counter += 1
 
         df = pd.DataFrame()
         df['Time'] = time
         df['Py'] = p_ymid
         df['second_moment'] = np.log10(second_moment)
+
         df['relative_energy_error'] = H
-        fig = subplots.make_subplots()
         fig['layout'].update(height=300, title='Momenta of site ', title_x=0.5,
                              xaxis_title="Time",
                              yaxis_title="Momentum")
         fig['layout']['margin'] = {'l': 20, 'b': 30, 'r': 10, 't': 50}
         fig.append_trace({'x': df['Time'], 'y': df['Py'], 'type': 'scatter', 'name': 'Susceptible'}, 1, 1)
-        fig2 = subplots.make_subplots()
         fig2['layout'].update(height=300, title='Hamiltonian error', title_x=0.5,
                              xaxis_title="Time",
                              yaxis_title="Energy error")
         fig2['layout']['margin'] = {'l': 20, 'b': 30, 'r': 10, 't': 50}
         fig2.append_trace({'x': df['Time'].apply(lambda x: np.log10(x)), 'y': df['relative_energy_error'],
                            'type': 'scatter', 'name': 'Susceptible'}, 1, 1)
-        fig3 = subplots.make_subplots()
         fig3['layout'].update(height=500, title='Second moment', title_x=0.5,
                              xaxis_title="Time",
                              yaxis_title="Second moment")
         fig3.append_trace({'x': df['Time'].apply(lambda x: np.log10(x)), 'y': df['second_moment'],
                            'type': 'scatter', 'name': 'Susceptible'}, 1, 1)
-        return [fig,[{'label':i,'value':i} for i in range(1,N+1)],fig2,outputs[0],outputs[1],outputs[2],fig3]
+        fig4['layout'].update(height=500, title='Normalised energy distribution', title_x=0.5,
+                              xaxis_title="Time",
+                              yaxis_title="Normalised energy")
+        fig4.append_trace({'x': [i for i in range (N)], 'y': norm_e[0],
+                           'type': 'scatter', 'name': 'Initial'}, 1, 1)
+        fig4.append_trace({'x': [i for i in range (N)], 'y': norm_e[-1],
+                           'type': 'scatter', 'name': 'Final'}, 1, 1)
+
+        return [fig,[{'label':i,'value':i} for i in range(1,N+1)],fig2,outputs[0],outputs[1],outputs[2],fig3,fig4]
     else:
         return [{
                 'data': [], 'layout': {
@@ -402,9 +424,9 @@ def parse_contents(contents, filename, date):
         elif 'xls' in filename:
             # Assume that the user uploaded an excel file
             df = pd.read_excel(io.BytesIO(decoded))
-#         print(df)
+        print(df)
     except Exception as e:
-#         print(e)
+        print(e)
         return html.Div([
             'There was an error processing this file.'
         ])
