@@ -40,3 +40,4 @@ Werkzeug==0.16.0
 wrapt==1.11.2
 xlrd==1.2.0
 zope.interface==4.7.1
+newrelic
