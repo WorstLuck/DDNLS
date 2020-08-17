@@ -130,10 +130,6 @@ def makePlot(beta,W,S,tol,tau,t_max,init,site_val,integrator,epsilons,max):
     # print(len(inputs))
     if len([i for i in inputs if str(i).lstrip('-').replace('.','',1).isdigit()])==len(inputs) and N > 5:
         N = int(N)
-        import numpy as np
-        import matplotlib.pyplot as plt
-        import pandas as pd
-        plt.rcParams["figure.figsize"] = [16, 9]
         np.set_printoptions(precision=20)
         # # Random list of alpha's
         # epsilon = np.random.uniform(-W / 2, W / 2, size=N)
