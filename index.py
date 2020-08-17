@@ -18,7 +18,7 @@ external_stylesheets =[dbc.themes.SIMPLEX]
 
 # Instantiate app and suppress callbacks
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-# app.config['suppress_callback_exceptions'] = True
+app.config['suppress_callback_exceptions'] = True
 server = app.server
 
 input_style = {'textAlign':'center','width':'auto'}
