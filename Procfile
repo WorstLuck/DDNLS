@@ -1,1 +1,1 @@
-web: newrelic-admin run-program gunicorn mysite.wsgi index:server
+web: newrelic-admin run-program gunicorn python index.py index:server
