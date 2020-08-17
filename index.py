@@ -130,7 +130,6 @@ def makePlot(beta,W,S,tol,tau,t_max,init,site_val,integrator,epsilons,max):
     # print(len(inputs))
     if len([i for i in inputs if str(i).lstrip('-').replace('.','',1).isdigit()])==len(inputs) and N > 5:
         N = int(N)
-        np.set_printoptions(precision=20)
         # # Random list of alpha's
         # epsilon = np.random.uniform(-W / 2, W / 2, size=N)
         # # fixed epsilon
@@ -174,14 +173,14 @@ def makePlot(beta,W,S,tol,tau,t_max,init,site_val,integrator,epsilons,max):
             return p_0
 
         if epsilons is None:
-            print('taking random epsilons')
-            print('\n')
+#             print('taking random epsilons')
+#             print('\n')
             epsilon = np.random.uniform(-W / 2, W / 2, size=N)
             p_0 = makeWavepacket(p_0, N, start, L)
             outputs = [False,False,False]
         else:
             df = pd.read_json(epsilons)
-            print('taking epsilons from file')
+#             print('taking epsilons from file')
             epsilon = np.array(list(df['Epsilons']))
             p_0 = np.array(list(df['Momenta']))
             q_0 = np.array(list(df['Position']))
@@ -191,7 +190,7 @@ def makePlot(beta,W,S,tol,tau,t_max,init,site_val,integrator,epsilons,max):
                                                                                                         -1) * p_0 - np.roll(
             q_0, -1) * q_0
         H_0[-1] = (epsilon[-1] / 2) * (q_0[-1] ** 2 + p_0[-1] ** 2) + (beta / 8) * (q_0[-1] ** 2 + p_0[-1] ** 2) ** 2
-        print('Initial Hamiltonian: {}'.format(sum(H_0)))
+#         print('Initial Hamiltonian: {}'.format(sum(H_0)))
 
         S_0 = 0.5 * (q_0 * 2 + p_0 ** 2)
 
@@ -204,7 +203,7 @@ def makePlot(beta,W,S,tol,tau,t_max,init,site_val,integrator,epsilons,max):
 
         # Initial evolution vector
         u_0 = list(zip(q_0, p_0))
-        print('U0 = {}'.format(u_0))
+#         print('U0 = {}'.format(u_0))
 
         # initial time
         t_0 = 0
@@ -338,14 +337,14 @@ def makePlot(beta,W,S,tol,tau,t_max,init,site_val,integrator,epsilons,max):
             second_moment = np.append(second_moment,moment)
 
             if abs((sum(S_new) - sum(S_0)) / sum(S_new)) >= eps:
-                print(abs((sum(S_new) - sum(S_0)) / sum(S_new)))
-                print(sum(S_new))
-                print('S not conserved up to {}, broken at time step {}'.format(eps, t_0))
+#                 print(abs((sum(S_new) - sum(S_0)) / sum(S_new)))
+#                 print(sum(S_new))
+#                 print('S not conserved up to {}, broken at time step {}'.format(eps, t_0))
                 break
             if abs((sum(H_new) - sum(H_0)) / sum(H_new)) >= eps:
-                print(abs((sum(H_new) - sum(H_0)) / sum(H_new)))
-                print(sum(H_new), 'new hamiltonian')
-                print('H not conserved up to {}, broken at time step {}'.format(eps, t_0))
+#                 print(abs((sum(H_new) - sum(H_0)) / sum(H_new)))
+#                 print(sum(H_new), 'new hamiltonian')
+#                 print('H not conserved up to {}, broken at time step {}'.format(eps, t_0))
                 break
             t_0 += tau
 
@@ -403,9 +402,9 @@ def parse_contents(contents, filename, date):
         elif 'xls' in filename:
             # Assume that the user uploaded an excel file
             df = pd.read_excel(io.BytesIO(decoded))
-        print(df)
+#         print(df)
     except Exception as e:
-        print(e)
+#         print(e)
         return html.Div([
             'There was an error processing this file.'
         ])
@@ -417,7 +416,7 @@ def parse_contents(contents, filename, date):
               [State('upload-data', 'filename'),
                State('upload-data', 'last_modified')])
 def update_output(list_of_contents,list_of_names, list_of_dates):
-    print(list_of_contents,'listofcontents')
+#     print(list_of_contents,'listofcontents')
     if list_of_contents is not None:
         children = [
             parse_contents(c, n, d) for c, n, d in
