@@ -233,7 +233,7 @@ def makePlot(beta,W,S,tol,tau,t_max,init,integrator,epsilons,max,site_val):
         second_moment = np.array([])
         normalised_energy = np.array([])
 
-        logpoints = 1000
+        logpoints = int(t_max/tau)
         logtau = np.log10(t_max) / logpoints
         tlog = logtau
 
